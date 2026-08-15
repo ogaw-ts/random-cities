@@ -45,6 +45,13 @@ def get_cities(prefecture):
 
 st.set_page_config(page_title="おでかけルーレット", page_icon="🎲")
 
+hide_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_style, unsafe_allow_html=True)
+
 st.title("🎲 おでかけルーレット 🗾")
 st.write("市町村をランダムに１つ選びます！")
 st.caption(
@@ -84,7 +91,7 @@ if use_village:
 
 st.markdown('<style>.stButton button * { font-size:30px !important; }</style>', unsafe_allow_html=True)
 
-if st.button("ルーレットを回す！", use_container_width=True):
+if st.button("ルーレットを回す", use_container_width=True):
     if types == []:
         st.error("市，町，村のいずれかにチェックを入れてください！")
     else:
