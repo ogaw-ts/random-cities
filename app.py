@@ -47,7 +47,8 @@ st.set_page_config(page_title="おでかけルーレット", page_icon="🎲")
 
 hide_style = """
     <style>
-    #MainMenu {visibility: hidden;}
+    .stDeployButton {display:none;}
+    header {visibility: hidden;}
     </style>
 """
 st.markdown(hide_style, unsafe_allow_html=True)
