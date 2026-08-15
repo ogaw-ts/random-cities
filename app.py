@@ -47,16 +47,7 @@ st.set_page_config(page_title="おでかけルーレット", page_icon="🎲")
 
 hide_style = """
     <style>
-    header > *:not(#MainMenu) {
-        display: none;
-    }
-    #MainMenu {
-        display: block;
-        position: fixed;
-        top: 0.5rem;
-        right: 0.5rem;
-        z-index: 9999;
-    }
+    header {visibility: hidden;}
     </style>
 """
 st.markdown(hide_style, unsafe_allow_html=True)
