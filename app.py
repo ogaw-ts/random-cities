@@ -47,6 +47,9 @@ st.set_page_config(page_title="おでかけルーレット", page_icon="🎲")
 
 st.title("🎲 おでかけルーレット 🗾")
 st.write("市町村をランダムに１つ選びます！")
+st.caption(
+    "出典：[「位置参照情報ダウンロードサービス」（国土交通省）](https://nlftp.mlit.go.jp/isj/)を加工して作成"
+)
 
 with st.expander("オプション", expanded=True):
     st.info("地方・都道府県を指定しない場合は全国が対象になります")
