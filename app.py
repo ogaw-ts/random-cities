@@ -1,9 +1,9 @@
-import streamlit as st
-import requests
 import random
 import time
 
-# 地方と都道府県のマッピング
+import requests
+import streamlit as st
+
 REGIONS = {
     "北海道": ["北海道"],
     "東北": ["青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"],
@@ -31,36 +31,38 @@ ALL_PREFECTURES = [pref for prefs in REGIONS.values() for pref in prefs]
 
 @st.cache_data(show_spinner=False)
 def get_cities(prefecture):
-    """APIから指定した都道府県の市町村を取得し、キャッシュする"""
-    url = f"http://geoapi.heartrails.com/api/json?method=getCities&prefecture={prefecture}"
+    url = f"https://geoapi.heartrails.com/api/json?method=getCities&prefecture={prefecture}"
     try:
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
             if "response" in data and "location" in data["response"]:
-                return list(set(loc["city"] for loc in data["response"]["location"]))
-    except Exception as e:
+                return list({loc["city"] for loc in data["response"]["location"]})
+    except (requests.RequestException, ValueError, KeyError) as e:
         st.error(f"{prefecture}のデータ取得に失敗しました: {e}")
     return []
 
-
-# --- UI構築（縦型レイアウト） ---
 
 st.set_page_config(page_title="おでかけルーレット", page_icon="🎲")
 
 st.title("🎲 おでかけルーレット 🗾")
 st.write("市町村をランダムに１つ選びます！")
 
-# 折りたたみメニューでオプション設定を配置
-with st.expander("⚙️ オプション", expanded=True):
-    st.info("💡 地方・都道府県を指定しない場合は全国が対象になります")
+with st.expander("オプション", expanded=True):
+    st.info("地方・都道府県を指定しない場合は全国が対象になります")
 
     selected_regions = st.multiselect("地方を選ぶ", options=list(REGIONS.keys()))
 
-    selected_prefectures = st.multiselect("都道府県を選ぶ", options=ALL_PREFECTURES)
+    excluded_prefs = set()
+    for region in selected_regions:
+        excluded_prefs.update(REGIONS[region])
+    available_prefectures = [p for p in ALL_PREFECTURES if p not in excluded_prefs]
+
+    selected_prefectures = st.multiselect(
+        "都道府県を選ぶ", options=available_prefectures
+    )
 
     st.write("対象とする自治体")
-    # 縦型画面でも綺麗に収まるようカラムで分割
     col1, col2, col3 = st.columns(3)
     with col1:
         use_city = st.checkbox("市", value=True)
@@ -71,20 +73,17 @@ with st.expander("⚙️ オプション", expanded=True):
 
 types = []
 if use_city:
-    types.append("市")
+    types.extend(["市", "区"])
 if use_town:
     types.append("町")
 if use_village:
     types.append("村")
 
-# 余白を追加してボタンを目立たせる
-# st.markdown("<br>", unsafe_allow_html=True)
+st.markdown('<style>.stButton button * { font-size:30px !important; }</style>', unsafe_allow_html=True)
 
-# --- メイン処理（ルーレット） ---
-
-if st.button("🎯 ルーレットを回す！", use_container_width=True):
-    if not types:
-        st.error("市、町、村のいずれかにチェックを入れてください！")
+if st.button("ルーレットを回す！", use_container_width=True):
+    if types == []:
+        st.error("市，町，村のいずれかにチェックを入れてください！")
     else:
         target_prefs = set()
         if selected_regions:
@@ -93,7 +92,7 @@ if st.button("🎯 ルーレットを回す！", use_container_width=True):
         if selected_prefectures:
             target_prefs.update(selected_prefectures)
 
-        if not target_prefs:
+        if target_prefs == set():
             target_prefs.update(ALL_PREFECTURES)
 
         with st.status(
@@ -115,12 +114,12 @@ if st.button("🎯 ルーレットを回す！", use_container_width=True):
             item for item in all_cities if any(item["city"].endswith(t) for t in types)
         ]
 
-        if not filtered_cities:
+        if filtered_cities == []:
             st.warning(
                 "指定された条件に合致する市町村が見つかりませんでした。条件を変えてお試しください。"
             )
         else:
-            st.write("### 🥁 抽選中...")
+            header = st.markdown("### 抽選中...")
             placeholder = st.empty()
 
             for _ in range(15):
@@ -132,11 +131,11 @@ if st.button("🎯 ルーレットを回す！", use_container_width=True):
                 time.sleep(0.1)
 
             result = random.choice(filtered_cities)
+            header.empty()
             placeholder.empty()
 
-            st.balloons()
-            st.success("🎉 行き先が決定しました！")
+            st.success("### 🎉 結果")
             st.markdown(
-                f"<h1 style='text-align: center; color: #ff4b4b;'>{result['prefecture']}<br>{result['city']}</h1>",
+                f"<h1 style='text-align: center; color: #ff4b4b;'>{result['prefecture']} {result['city']}</h1>",
                 unsafe_allow_html=True,
             )
